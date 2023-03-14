@@ -25,14 +25,20 @@ images.img_b = images.mr_raw((0,0,255))
 class states:
     dead=0
     alive=1
+    ant_d=[2,3,4,5]
+    ant_a=[6,7,8,9]
     img={dead:images.img_k, alive:images.img_b}
-
-setup = store.setup
+up,dn,lf,rt = 0,1,2,3
+states.img.update({states.ant_d[i]:images.img_r for i in range(4)})
+states.img.update({states.ant_a[i]:images.img_g for i in range(4)})
 
 class Cell(sprite.Sprite):
     def __init__(self, gpos, *groups) -> None:
         self.pos = gpos
-        self.state = states.alive if gpos in setup else states.dead
+        self.state = states.ant_a[0] if gpos == (20, 20) else states.dead
+        if gpos == (20,20):
+            print(self.state)
+        #self.state = states.alive if gpos in store.setup else states.dead
 
         super().__init__(*groups)
         self.rect = self.image.get_rect()
@@ -43,14 +49,21 @@ class Cell(sprite.Sprite):
         return states.img[self.state]
 
     def update(self, curr_states: Wrapgrid[int]) -> None:
-        neighbours = curr_states.surrounding(self.pos)
-        living = [i for r in neighbours for i in r].count(states.alive)
+        nbs = curr_states.surrounding(self.pos)
 
         match self.state:
-            case states.alive if living-1 not in [2,3]:
-                self.state = states.dead
-            case states.dead if living==3:
+            case s if s in states.ant_d:
                 self.state = states.alive
-            case _:
+            case s if s in states.ant_a:
+                self.state = states.dead
+            case s if nbs[1][0] in [states.ant_d[up], states.ant_a[dn]]:
+                self.state = states.ant_d[rt]+(4*s)
+            case s if nbs[1][2] in [states.ant_d[dn], states.ant_a[up]]:
+                self.state = states.ant_d[lf]+(4*s)
+            case s if nbs[0][1] in [states.ant_d[rt], states.ant_a[lf]]:
+                self.state = states.ant_d[dn]+(4*s)
+            case s if nbs[2][1] in [states.ant_d[lf], states.ant_a[rt]]:
+                self.state = states.ant_d[up]+(4*s)
+            case _: 
                 pass
         return

@@ -1,11 +1,15 @@
-import pygame
-from wrapgrid import Wrapgrid
 from cell import Cell
-import store, time, multiprocessing
+from wrapgrid import Wrapgrid
+import store, time, pygame
+import multiprocessing.pool as mp
 
 def avg(iter):
     iter = list(iter)
     return sum(iter) / max(len(iter), 1)
+
+def update(c: 'Cell', states: Wrapgrid[int]):
+    c.update(states)
+    return c.state
 
 if __name__ == "__main__":
     # init
@@ -23,6 +27,8 @@ if __name__ == "__main__":
     fps_t = pygame.event.custom_type()
     pygame.time.set_timer(pygame.event.Event(fps_t), 5000)
 
+    p = mp.ThreadPool()
+
     # --------------------- MAIN LOOP ---------------------------
     run = True
     while run:
@@ -38,7 +44,8 @@ if __name__ == "__main__":
         t1 = time.time() * 1000
 
         states = grid.convert(lambda c: c.state)
-        grid_sprites.update(states)
+        states.baseval = None
+        p.starmap(update, ((s, states) for s in grid_sprites.sprites()))
 
         t2 = time.time() * 1000
 

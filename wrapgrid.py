@@ -18,6 +18,9 @@ class Wrapgrid(Generic[T], Dict[Vec2, T]):
         return new_grid
     
     def wrap(self, key) -> Vec2 | None:
+        if not hasattr(self, "wv"):
+            #basically if we're in the process of unpickling
+            return key # we don't have the vars to do anything else yet
         if not (self.wv or 0 <= key[1] < self.size[1]):
             return None
         if not (self.wh or 0 <= key[0] < self.size[0]):
